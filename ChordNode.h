@@ -34,14 +34,23 @@ public:
     }
 
     ChordNode *GetSuccessor() {
-        return successor;
+        return this->fingerTable[0].successorNode;
+    };
+
+    void SetSuccessor(ChordNode *node) {
+        this->fingerTable[0].successorNode = node;
+        this->fingerTable[0].successorID = node->ID;
+    };
+
+    void SetPredecessor(ChordNode *node) {
+        this->predecessor = node;
     };
     FingerTableRow GetFingerTableRow(int);
 
 private:
     int ID;
     int size;
-    ChordNode *predecessor, *successor;
+    ChordNode *predecessor;
     FingerTableRow *fingerTable;
     std::map <int, std::string> data;
 };

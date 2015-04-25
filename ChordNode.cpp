@@ -20,6 +20,7 @@ ostream& operator<<(ostream& out, const ChordNode &node) {
 ChordNode::ChordNode(const ChordNode &node) {
     this->ID = node.ID;
     this->size = node.size;
+    this->predecessor = node.predecessor;
     this->fingerTable = new FingerTableRow[size];
     for (int i = 0; i < this->size; i++) {
         this->fingerTable[i].hop = node.fingerTable[i].hop;
@@ -32,11 +33,11 @@ ChordNode::ChordNode(const ChordNode &node) {
 ChordNode::ChordNode(int ID, int size) {
     this->ID = ID;
     this->size = size;
-    this->predecessor = this->successor = this;
+    this->predecessor = NULL;
     this->data = std::map<int, std::string>();
     this->fingerTable = new FingerTableRow[size];
     for (int i = 0; i < this->size; i++) {
-        this->fingerTable[i].hop = ID + pow(2, i);
+        this->fingerTable[i].hop = (ID + pow(2, i)) % pow(2, size);
         this->fingerTable[i].successorID = ID;
         this->fingerTable[i].successorNode = this;
     }
@@ -54,9 +55,7 @@ ChordNode::~ChordNode() {
 
 void ChordNode::AddPeer(int ID) {
     ChordNode *newNode = new ChordNode(ID, this->size);
-    if (this->successor->ID == this->ID) {
-        this->predecessor = this->successor = newNode;
-        newNode->predecessor = newNode->successor = this;
+    if (this->GetSuccessor()->ID == this->ID) {
         for (int i = 0; i < size; i++) {
             newNode->fingerTable[i].successorID = 0;
             newNode->fingerTable[i].successorNode = this;
@@ -64,11 +63,6 @@ void ChordNode::AddPeer(int ID) {
             this->fingerTable[i].successorNode = newNode;
         }
     } else {
-        newNode->successor = this->FindSuccessor(ID);
-        newNode->predecessor = newNode->successor->predecessor;
-        newNode->predecessor->successor = newNode;
-        newNode->successor->predecessor = newNode;
-
         for (int i = 0; i < size; i++) {
             ChordNode *successorNode = FindSuccessor(newNode->fingerTable[i].hop);
             newNode->fingerTable[i].successorID = successorNode->ID;
@@ -84,8 +78,6 @@ void ChordNode::AddPeer(int ID) {
 
 void ChordNode::RemovePeer(int ID) {
     ChordNode *node = FindNode(ID);
-    node->successor->predecessor = node->predecessor;
-    node->predecessor->successor = node->successor;
     delete node;
 
     cout << endl << "PEER " << ID << " REMOVED" << endl;
@@ -126,15 +118,15 @@ int ChordNode::FindKey(std::string key) {
 }
 
 ChordNode *ChordNode::FindNode(int ID) {
-    if (InsideRange(ID, this->ID, this->successor->ID)) {
+    if (InsideRange(ID, this->ID, this->GetSuccessor()->ID)) {
         return this;
     } else {
-        this->successor->FindNode(ID);
+        this->GetSuccessor()->FindNode(ID);
     }
 }
 
 ChordNode *ChordNode::ClosestPrecedingNode(int ID) {
-    if (this == successor) {
+    if (this == this->GetSuccessor()) {
         return this;
     }
     for (int i = size - 1; i > 0; i--) {
@@ -142,13 +134,13 @@ ChordNode *ChordNode::ClosestPrecedingNode(int ID) {
             return fingerTable[i].successorNode;
         }
     }
-    return successor;
+    return this->GetSuccessor();
 }
 
 ChordNode *ChordNode::FindSuccessor(int ID) {
-    if (InsideRange(ID, this->ID + 1, successor->ID)) {
+    if (InsideRange(ID, this->ID + 1, this->GetSuccessor()->ID)) {
         cout << this->ID << ">";
-        return successor;
+        return this->GetSuccessor();
     }
     ChordNode *p = ClosestPrecedingNode(ID);
     return p->FindSuccessor(ID);
@@ -170,11 +162,11 @@ ChordNode *ChordNode::UpdateNodes(ChordNode *node) {
 }
 
 void ChordNode::Stabilize() {
-    ChordNode *x = this->successor->predecessor;
-    if (x->ID != this->ID && InsideRange(x->ID, this->ID + 1, this->successor->ID - 1)) {
-        this->successor = x;
+    ChordNode *x = this->GetSuccessor()->GetPredecessor();
+    if (x->ID != this->ID && InsideRange(x->ID, this->ID + 1, this->GetSuccessor()->ID - 1)) {
+        this->SetSuccessor(x);
     }
-    this->successor->Notify(this);
+    this->GetSuccessor()->Notify(this);
 }
 
 void ChordNode::Notify(ChordNode *node) {
