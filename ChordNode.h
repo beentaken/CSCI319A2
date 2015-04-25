@@ -3,31 +3,37 @@
 #include <map>
 #include <iostream>
 #include <string>
-#include "FingerTableElement.h"
+#include "FingerTableRow.h"
 
 class ChordNode {
+    friend std::ostream& operator<<(std::ostream&, const ChordNode &);
 public:
-    ChordNode(int ID);
-    ChordNode(int ID, int size);
-    void AddPeer(int ID);
-    void RemovePeer(int ID);
-    int FindKey(std::string key);
-    int Hash(std::string data);
-    void Insert(std::string data);
-    void Delete(std::string data);
-    void Print(int ID);
+    ChordNode(const ChordNode &);
+    ChordNode(int, int);
+    ~ChordNode();
+    void AddPeer(int);
+    void RemovePeer(int);
+    int FindKey(std::string);
+    ChordNode *FindNode(int);
+    ChordNode *FindSuccessor(int);
+    ChordNode *UpdateNodes(ChordNode *);
+    int Hash(std::string);
+    void Insert(std::string);
+    void Delete(std::string);
+    void Print(int);
     int GetSize();
     int GetID();
     ChordNode *GetSuccessor();
     ChordNode *GetPredeccessor();
-    FingerTableElement GetFingerTable(int index);
+    FingerTableRow GetFingerTableRow(int);
+    void BuildFingerTable(ChordNode *);
 
 private:
     int ID;
     int size;
-    ChordNode *predecessor, *successor;
-    FingerTableElement *fingerTable;
-    std::map <std::string, std::string> *data;
+    ChordNode *successor;
+    FingerTableRow *fingerTable;
+    std::map <int, std::string> data;
 };
 
 #endif	/* CHORDNODE_H */
