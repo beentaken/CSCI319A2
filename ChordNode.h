@@ -15,23 +15,33 @@ public:
     void RemovePeer(int);
     int FindKey(std::string);
     ChordNode *FindNode(int);
+    ChordNode *ClosestPrecedingNode(int);
     ChordNode *FindSuccessor(int);
     ChordNode *UpdateNodes(ChordNode *);
+    void FixFingerTable(ChordNode *);
+    void Stabilize();
+    void Notify(ChordNode *);
     int Hash(std::string);
     void Insert(std::string);
     void Delete(std::string);
+    bool InsideRange(int, int, int);
     void Print(int);
     int GetSize();
     int GetID();
-    ChordNode *GetSuccessor();
-    ChordNode *GetPredeccessor();
+
+    ChordNode *GetPredecessor() {
+        return predecessor;
+    }
+
+    ChordNode *GetSuccessor() {
+        return successor;
+    };
     FingerTableRow GetFingerTableRow(int);
-    void BuildFingerTable(ChordNode *);
 
 private:
     int ID;
     int size;
-    ChordNode *successor;
+    ChordNode *predecessor, *successor;
     FingerTableRow *fingerTable;
     std::map <int, std::string> data;
 };
