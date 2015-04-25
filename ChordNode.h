@@ -15,10 +15,10 @@ public:
     void RemovePeer(int);
     int FindKey(std::string);
     ChordNode *FindNode(int);
-    ChordNode *ClosestPrecedingNode(int, ChordNode *);
-    ChordNode *FindSuccessor(int, ChordNode *);
+    ChordNode *ClosestPrecedingNode(int);
+    ChordNode *FindSuccessor(int);
     ChordNode *UpdateNodes(ChordNode *);
-    void FixFingerTable(ChordNode *);
+    void FixFingerTable();
     void Stabilize();
     void Notify(ChordNode *);
     int Hash(std::string);

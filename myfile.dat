@@ -1,4 +1,4 @@
 initchord 5 #Create a CHORD of size 32
 addpeer 7 #Add a new peer whose ID is to be 7
-addpeer 3
-addpeer 5
+addpeer 26
+insert THIS IS A TEST
