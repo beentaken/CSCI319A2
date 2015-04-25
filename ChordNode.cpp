@@ -18,15 +18,15 @@ ostream& operator<<(ostream& out, const ChordNode &node) {
 }
 
 ChordNode::ChordNode(const ChordNode &node) {
-    ID = node.ID;
-    size = node.size;
-    fingerTable = new FingerTableRow[size];
-    for (int i = 0; i < size; i++) {
-        fingerTable[i].hop = node.fingerTable[i].hop;
-        fingerTable[i].successorID = node.fingerTable[i].successorID;
-        fingerTable[i].successorNode = node.fingerTable[i].successorNode;
+    this->ID = node.ID;
+    this->size = node.size;
+    this->fingerTable = new FingerTableRow[size];
+    for (int i = 0; i < this->size; i++) {
+        this->fingerTable[i].hop = node.fingerTable[i].hop;
+        this->fingerTable[i].successorID = node.fingerTable[i].successorID;
+        this->fingerTable[i].successorNode = node.fingerTable[i].successorNode;
     }
-    data = node.data;
+    this->data = node.data;
 }
 
 ChordNode::ChordNode(int ID, int size) {
@@ -35,10 +35,10 @@ ChordNode::ChordNode(int ID, int size) {
     this->predecessor = this->successor = this;
     this->data = std::map<int, std::string>();
     this->fingerTable = new FingerTableRow[size];
-    for (int i = 0; i < size; i++) {
-        fingerTable[i].hop = ID + pow(2, i);
-        fingerTable[i].successorID = ID;
-        fingerTable[i].successorNode = this;
+    for (int i = 0; i < this->size; i++) {
+        this->fingerTable[i].hop = ID + pow(2, i);
+        this->fingerTable[i].successorID = ID;
+        this->fingerTable[i].successorNode = this;
     }
 }
 
@@ -56,6 +56,7 @@ void ChordNode::AddPeer(int ID) {
     ChordNode *newNode = new ChordNode(ID, this->size);
     newNode->predecessor = NULL;
     //cout << this->ID << ">";
+    /*
     if (this->successor->ID == this->ID) {
         this->successor = newNode;
         newNode->successor = this;
@@ -66,19 +67,19 @@ void ChordNode::AddPeer(int ID) {
             this->fingerTable[i].successorNode = newNode;
         }
     } else {
-        newNode->successor = this->FindSuccessor(ID);
+        newNode->successor = this->FindSuccessor(ID, newNode);
         for (int i = 0; i < size; i++) {
-            ChordNode *successorNode = FindSuccessor(newNode->fingerTable[i].hop);
+            ChordNode *successorNode = FindSuccessor(newNode->fingerTable[i].successorID, newNode->fingerTable[i].successorNode);
             newNode->fingerTable[i].successorID = successorNode->ID;
             newNode->fingerTable[i].successorNode = successorNode;
         }
     }
-    /*
-    ChordNode *succ = FindSuccessor(ID);
+    */
+    ChordNode *succ = FindSuccessor(ID, newNode);
     FixFingerTable(succ);
     newNode->successor = succ;
-    */
     cout << endl << "PEER " << newNode->ID << " ADDED" << endl;
+    cout << *newNode << endl;
 }
 
 void ChordNode::RemovePeer(int ID) {
@@ -111,25 +112,25 @@ ChordNode *ChordNode::FindNode(int ID) {
 
 }
 
-ChordNode *ChordNode::ClosestPrecedingNode(int ID) {
-    if (this == successor) {
-        return this;
+ChordNode *ChordNode::ClosestPrecedingNode(int ID, ChordNode *node) {
+    if (node == node->successor) {
+        return node;
     }
     for (int i = size - 1; i > 0; i--) {
-        if (InsideRange(fingerTable[i].successorID, this->ID + 1, ID - 1)) {
-            return fingerTable[i].successorNode;
+        if (InsideRange(node->fingerTable[i].successorID, ID + 1, ID - 1)) {
+            return node->fingerTable[i].successorNode;
         }
     }
-    return successor;
+    return node->successor;
 }
 
-ChordNode *ChordNode::FindSuccessor(int ID) {
+ChordNode *ChordNode::FindSuccessor(int ID, ChordNode *node) {
     bool inrange = InsideRange(ID, this->ID + 1, successor->ID);
     if (inrange) {
         return successor;
     }
-    ChordNode *p = ClosestPrecedingNode(ID);
-    return p->FindSuccessor(ID);
+    ChordNode *p = ClosestPrecedingNode(ID, node);
+    return p->FindSuccessor(ID, node);
 }
 
 ChordNode *ChordNode::UpdateNodes(ChordNode *node) {
@@ -148,7 +149,7 @@ ChordNode *ChordNode::UpdateNodes(ChordNode *node) {
 
 void ChordNode::FixFingerTable(ChordNode *node) {
     for (int i = 0; i < size; i++) {
-        node->fingerTable[i].successorNode = FindSuccessor((node->ID + (int) pow(2, i)) % (int) pow(2, size));
+        node->fingerTable[i].successorNode = FindSuccessor((node->ID + (int) pow(2, i)) % (int) pow(2, size), node);
         node->fingerTable[i].successorID = node->fingerTable[i].successorNode->ID;
     }
 }

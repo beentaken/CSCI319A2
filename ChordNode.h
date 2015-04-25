@@ -15,8 +15,8 @@ public:
     void RemovePeer(int);
     int FindKey(std::string);
     ChordNode *FindNode(int);
-    ChordNode *ClosestPrecedingNode(int);
-    ChordNode *FindSuccessor(int);
+    ChordNode *ClosestPrecedingNode(int, ChordNode *);
+    ChordNode *FindSuccessor(int, ChordNode *);
     ChordNode *UpdateNodes(ChordNode *);
     void FixFingerTable(ChordNode *);
     void Stabilize();
