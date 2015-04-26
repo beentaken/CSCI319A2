@@ -42,7 +42,6 @@ ChordNode::ChordNode(int ID, int ftSize) {
     this->data = std::map<int, std::string>();
     this->fingerTable = new FingerTableRow[ftSize];
     for (int i = 0; i < this->ftSize; i++) {
-        //cout << "Mod: " << (ID + (int)pow(2, i)) % this->chordSize << endl;
         this->fingerTable[i].hop = (ID + (int) pow(2, i)) % this->chordSize;
         this->fingerTable[i].successorID = ID;
         this->fingerTable[i].successorNode = this;
@@ -61,7 +60,7 @@ ChordNode::~ChordNode() {
 
 void ChordNode::AddPeer(int ID) {
     ChordNode *newNode = new ChordNode(ID, this->ftSize);
-    if (this->GetSuccessor()->ID == this->ID) {
+    if (this->successor->ID == this->ID) {
         this->predecessor = newNode;
         this->successor = newNode;
         newNode->predecessor = this;
@@ -83,10 +82,10 @@ void ChordNode::AddPeer(int ID) {
         newNode->predecessor->successor = newNode;
         newNode->successor->predecessor = newNode;
         FixFingerTables(this);
-        ChordNode *succ = this->GetSuccessor();
+        ChordNode *succ = this->successor;
         while (succ->ID != 0) {
             FixFingerTables(succ);
-            succ = succ->GetSuccessor();
+            succ = succ->successor;
         }
     }
 
@@ -129,7 +128,6 @@ bool ChordNode::InsideRange(int ID, int start, int finish) {
     return (start < finish && start <= ID && ID <= finish) ||
             (start > finish && ((start <= ID && ID <= maxID) || (minID <= ID && ID <= finish))) ||
             ((start == finish) && (ID == start));
-
 }
 
 ChordNode *ChordNode::FindKey(int key) {
@@ -137,74 +135,30 @@ ChordNode *ChordNode::FindKey(int key) {
 }
 
 ChordNode *ChordNode::FindNode(int ID) {
-    bool found = false;
-    for (int i = this->ftSize - 1; i >= 0; i--) {
-        if (this->fingerTable[i].successorID < ID && found) {
-
-        }
-    }
+    return NULL;
 }
 
 ChordNode *ChordNode::ClosestPrecedingNode(int ID) {
-    if (this == this->GetSuccessor()) {
+    if (this == this->successor) {
         return this;
     }
     for (int i = this->ftSize - 1; i >= 0; i--) {
-        if (InsideRange(fingerTable[i].successorID, this->ID + 1, ID - 1)) {
+        if (InsideRange(fingerTable[i].successorID, this->ID, ID)) {
             return fingerTable[i].successorNode;
         }
     }
-    return this->GetSuccessor();
+    return this->successor;
 }
 
 ChordNode *ChordNode::FindSuccessor(int ID) {
-    if (InsideRange(ID, this->ID + 1, this->GetSuccessor()->ID)) {
+    if (InsideRange(ID, this->ID + 1, this->successor->ID)) {
         cout << this->ID << ">";
-        return this->GetSuccessor();
+        return this->successor;
     }
     ChordNode *p = ClosestPrecedingNode(ID);
     return p->FindSuccessor(ID);
 }
 
-/*
-ChordNode *ChordNode::FindPredecessor(int ID) {
-    ChordNode *node = this;
-    while (!InsideRange(ID, node->ID, node->successor->ID)) {
-        node = node->ClosestPrecedingNode(ID);
-    }
-    return node;
-}
-
-ChordNode *ChordNode::UpdateNodes(ChordNode *node) {
-    int index = 0;
-    while (index < this->ftSize && fingerTable[index].hop <= node->ID) {
-        if (fingerTable[index].successorID >= node->ID)//update successor to point to new node
-        {
-            fingerTable[index].successorID = node->ID;
-            fingerTable[index].successorNode = node;
-        }
-        index++;
-    }
-    if (fingerTable[0].successorID != node->ID)//propagate change around chord until back to beginning
-        return fingerTable[0].successorNode->UpdateNodes(node);
-    return this;
-}
-
-void ChordNode::Stabilize() {
-    ChordNode *x = this->GetSuccessor()->GetPredecessor();
-    if (x->ID != this->ID && InsideRange(x->ID, this->ID + 1, this->GetSuccessor()->ID - 1)) {
-        this->SetSuccessor(x);
-    }
-    this->GetSuccessor()->Notify(this);
-}
-
-void ChordNode::Notify(ChordNode *node) {
-    if ((this->predecessor->ID == this->ID) ||
-            (InsideRange(node->ID, this->predecessor->ID + 1, this->ID - 1))) {
-        predecessor = node;
-    }
-}
- */
 int ChordNode::Hash(std::string data) {
     int key = 0;
     for (int i = 0; i < data.length(); i++) {
