@@ -17,6 +17,7 @@ public:
     ChordNode *FindNode(int);
     ChordNode *ClosestPrecedingNode(int);
     ChordNode *FindSuccessor(int);
+    //ChordNode *FindSuccessor(int, int, ChordNode *);
     void FixFingerTables(ChordNode *);
     int Hash(std::string);
     void Insert(std::string);
