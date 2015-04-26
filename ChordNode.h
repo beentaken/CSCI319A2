@@ -17,33 +17,13 @@ public:
     ChordNode *FindNode(int);
     ChordNode *ClosestPrecedingNode(int);
     ChordNode *FindSuccessor(int);
-    ChordNode *FindPredecessor(int);
-    ChordNode *UpdateNodes(ChordNode *);
     void FixFingerTables(ChordNode *);
-    void Stabilize();
-    void Notify(ChordNode *);
     int Hash(std::string);
     void Insert(std::string);
     void Delete(std::string);
+    void DeleteAll(ChordNode *&);
     bool InsideRange(int, int, int);
     void Print(int);
-    int GetID();
-
-    ChordNode *GetPredecessor() {
-        return this->predecessor;
-    }
-
-    ChordNode *GetSuccessor() {
-        return this->successor;
-    };
-
-    void SetSuccessor(ChordNode *node) {
-        this->successor = node;
-    };
-
-    void SetPredecessor(ChordNode *node) {
-        this->predecessor = node;
-    };
     FingerTableRow GetFingerTableRow(int);
 
 private:
@@ -55,4 +35,3 @@ private:
 };
 
 #endif	/* CHORDNODE_H */
-

@@ -53,6 +53,9 @@ void Read(char *filename) {
             }
         }
     }
+    textfile.close();
+    chord->DeleteAll(chord);
+    delete chord;
     /*
     cout << endl << endl << *chord << endl;
     ChordNode *succ = chord->GetSuccessor();
@@ -60,7 +63,7 @@ void Read(char *filename) {
         cout << *succ << endl;
         succ = succ->GetSuccessor();
     }
-     */ 
+     */
 }
 
 int main(int argc, char** argv) {

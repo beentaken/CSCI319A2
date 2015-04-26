@@ -14,3 +14,7 @@ print 12
 delete THIS IS A TEST
 print 12
 removepeer 0
+print 7
+print 9
+print 12
+print 17
