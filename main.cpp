@@ -6,17 +6,11 @@
 #include "FingerTableRow.h"
 using namespace std;
 
-ChordNode * InitChord(int size) {
-    ChordNode *chord = new ChordNode(0, size);
-    cout << "Mark Thompson" << endl << "4419431" << endl;
-    return chord;
-}
-
 void Read(char *filename) {
     ifstream textfile;
     string line, data;
     int lineend;
-    ChordNode *chord = NULL;
+    ChordNode *chordPtr = NULL;
 
     textfile.open(filename);
     while (textfile.good()) {
@@ -31,32 +25,32 @@ void Read(char *filename) {
             if (line.substr(0, 9) == "initchord") {
                 data = line.substr(10, lineend);
                 int size = atoi(data.c_str());
-                chord = InitChord(size);
+                chordPtr->InitChord(size, chordPtr);
             } else if (line.substr(0, 7) == "addpeer") {
                 data = line.substr(8, lineend);
                 int ID = atoi(data.c_str());
-                chord->AddPeer(ID);
+                chordPtr->AddPeer(ID, chordPtr);
             } else if (line.substr(0, 10) == "removepeer") {
                 data = line.substr(11, lineend);
                 int ID = atoi(data.c_str());
-                chord->RemovePeer(ID);
+                chordPtr->RemovePeer(ID, chordPtr);
             } else if (line.substr(0, 6) == "insert") {
                 data = line.substr(7, lineend);
-                chord->Insert(data);
+                chordPtr->Insert(data, chordPtr);
             } else if (line.substr(0, 6) == "delete") {
                 data = line.substr(7, lineend);
-                chord->Delete(data);
+                chordPtr->Delete(data, chordPtr);
             } else if (line.substr(0, 5) == "print") {
                 data = line.substr(7, lineend);
                 int ID = atoi(data.c_str());
-                chord->Print(ID);
+                chordPtr->Print(ID, chordPtr);
             }
         }
     }
     
-    cout << endl << endl << *chord << endl;
-    ChordNode *succ = chord->GetSuccessor();
-    while (succ != chord) {
+    cout << endl << endl << *chordPtr << endl;
+    ChordNode *succ = chordPtr->GetSuccessor();
+    while (succ != chordPtr) {
         cout << *succ << endl;
         succ = succ->GetSuccessor();
     }
