@@ -53,14 +53,14 @@ void Read(char *filename) {
             }
         }
     }
-    /*
+    
     cout << endl << endl << *chord << endl;
     ChordNode *succ = chord->GetSuccessor();
     while (succ != chord) {
         cout << *succ << endl;
         succ = succ->GetSuccessor();
     }
-     */ 
+     
 }
 
 int main(int argc, char** argv) {
