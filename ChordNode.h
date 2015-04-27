@@ -14,13 +14,11 @@ public:
     void AddPeer(int, ChordNode *&);
     void RemovePeer(int, ChordNode *&);
     ChordNode *FindKey(int, ChordNode *&);
-    ChordNode *FindNode(int, ChordNode *&);
+    ChordNode *FindNode(int, int, ChordNode *&);
     ChordNode *FindSuccessor(int, int, ChordNode *&);
     ChordNode *FixFingerTables(int, ChordNode *&);
-    int Hash(std::string);
     void Insert(std::string, ChordNode *&);
     void Delete(std::string, ChordNode *&);
-    bool InsideRange(int, int, int);
     void Print(int, ChordNode *&);
 
     ChordNode *GetSuccessor() {
@@ -30,9 +28,13 @@ public:
 private:
     int ID;
     int ftSize, chordSize;
-    ChordNode *predecessor, *successor;
     FingerTableRow *fingerTable;
     std::map <int, std::string> data;
+
+    void ZeroFingerTable();
+    void UnZeroFingerTable(int);
+    int ShiftID(int, int);
+    int Hash(std::string);
 };
 
 #endif	/* CHORDNODE_H */

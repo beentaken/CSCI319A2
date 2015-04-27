@@ -22,23 +22,23 @@ ChordNode::ChordNode(int ID, int ftSize) {
     this->ID = ID;
     this->ftSize = ftSize;
     this->chordSize = pow(2, ftSize);
-    this->predecessor = this->successor = this;
     this->data = std::map<int, std::string>();
     this->fingerTable = new FingerTableRow[ftSize];
     for (int i = 0; i < this->ftSize; i++) {
         this->fingerTable[i].hop = (ID + (int) pow(2, i)) % this->chordSize;
         this->fingerTable[i].successorID = ID;
-        this->fingerTable[i].successorNode = this;
+        this->fingerTable[i].successorNode = NULL;
     }
 }
 
 ChordNode::~ChordNode() {
-    if (fingerTable != NULL) {
-        delete [] fingerTable;
+    //delete successor;
+    if (this->fingerTable != NULL) {
+        delete [] this->fingerTable;
     }
-    fingerTable = NULL;
-    if (!data.empty()) {
-        data.clear();
+    this->fingerTable = NULL;
+    if (!this->data.empty()) {
+        this->data.clear();
     }
 }
 
@@ -46,8 +46,8 @@ void ChordNode::InitChord(int size, ChordNode *&chordPtr) {
     if (chordPtr != NULL) {
         ChordNode *next;
         int startID = chordPtr->ID;
-        while (chordPtr->successor->ID != startID) {
-            next = chordPtr->successor;
+        while (chordPtr->fingerTable[0].successorID != startID) {
+            next = chordPtr->fingerTable[0].successorNode;
             delete chordPtr;
             chordPtr = next;
             if (chordPtr == NULL) {
@@ -56,15 +56,17 @@ void ChordNode::InitChord(int size, ChordNode *&chordPtr) {
         }
     }
     ChordNode *node = new ChordNode(0, size);
+    for (int i = 0; i < size; i++) {
+        node->fingerTable[i].successorID = 0;
+        node->fingerTable[i].successorNode = node;
+    }
     chordPtr = node;
     cout << "Mark Thompson" << endl << "4419431" << endl;
 }
 
 void ChordNode::AddPeer(int ID, ChordNode *&chordPtr) {
-    /*
-    
     ChordNode *newNode = new ChordNode(ID, this->ftSize);
-    ChordNode *succ = this->FindSuccessor(newNode->fingerTable[0].hop, ID, this);
+    ChordNode *succ = this->FindSuccessor(newNode->fingerTable[0].hop, this->ID, chordPtr);
     newNode->fingerTable[0].successorID = succ->ID;
     newNode->fingerTable[0].successorNode = succ;
     map<int, std::string>::iterator it = succ->data.begin();
@@ -76,64 +78,38 @@ void ChordNode::AddPeer(int ID, ChordNode *&chordPtr) {
         }
         succ->data.erase(succ->data.begin(), newit);
     }
-    this->FixFingerTables(ID, newNode);
+    chordPtr->FixFingerTables(chordPtr->ID, newNode);
     for (int i = 1; i < this->ftSize; i++) {
-        succ = this->FindSuccessor(newNode->fingerTable[i].hop, ID, this);
+        ChordNode *succ = this->FindSuccessor(newNode->fingerTable[i].hop, this->ID, chordPtr);
         newNode->fingerTable[i].successorID = succ->ID;
         newNode->fingerTable[i].successorNode = succ;
-    }
-     */
-    ChordNode *newNode = new ChordNode(ID, this->ftSize);
-    if (this->fingerTable[0].successorID == this->ID) { // If this is the second node to be added to network
-        newNode->predecessor = this;
-        newNode->successor = this;
-        this->predecessor = newNode;
-        this->successor = newNode;
-        for (int i = 0; i < this->ftSize; i++) {
-            newNode->fingerTable[i].successorID = 0;
-            newNode->fingerTable[i].successorNode = this;
-            this->fingerTable[i].successorID = ID;
-            this->fingerTable[i].successorNode = newNode;
-        }
-    } else {
-        ChordNode *succ = FindSuccessor(newNode->fingerTable[0].hop, this->ID, chordPtr);
-        newNode->fingerTable[0].successorID = succ->ID;
-        newNode->fingerTable[0].successorNode = succ;
-        newNode->predecessor = succ->predecessor;
-        newNode->predecessor->successor = newNode;
-        succ->predecessor = newNode;
-        newNode->successor = succ;
-        for (int i = 1; i < this->ftSize; i++) {
-            succ = FindSuccessor(newNode->fingerTable[i].hop, this->ID, chordPtr);
-            newNode->fingerTable[i].successorID = succ->ID;
-            newNode->fingerTable[i].successorNode = succ;
-        }
-        FixFingerTables(this->ID, newNode);
     }
     cout << endl << "PEER " << newNode->ID << " ADDED" << endl;
 }
 
 void ChordNode::RemovePeer(int ID, ChordNode *&chordPtr) {
-    ChordNode *node = FindNode(ID, chordPtr);
+    ChordNode *node = FindNode(ID, this->ID, chordPtr);
     delete node;
 
     cout << endl << "PEER " << ID << " REMOVED" << endl;
 }
 
-ChordNode *ChordNode::FixFingerTables(int startID, ChordNode *&chordPtr) {
-    int originalId, convertNewId, newNodeId;
-    newNodeId = chordPtr->ID;
-    int index = 0;
-    originalId = this->ID;
-    while (index < this->ftSize && this->fingerTable[index].hop <= convertNewId) {
-        if (this->fingerTable[index].successorID >= convertNewId) {
-            this->fingerTable[index].successorID = convertNewId;
-            this->fingerTable[index].successorNode = chordPtr;
+ChordNode *ChordNode::FixFingerTables(int startID, ChordNode *&newNode) {
+    int origID = this->ID;
+    int shiftedID = this->ShiftID(newNode->ID, origID);
+    this->ZeroFingerTable();
+    int i = 0;
+    while (i < this->ftSize && this->fingerTable[i].hop <= shiftedID) {
+        if (this->fingerTable[i].successorID >= shiftedID) {
+            this->fingerTable[i].successorID = shiftedID;
+            this->fingerTable[i].successorNode = newNode;
         }
-        index++;
+        i++;
     }
-    if (this->fingerTable[0].successorID != startID)
-        return this->fingerTable[0].successorNode->FixFingerTables(startID, chordPtr);
+    this->UnZeroFingerTable(origID);
+    if (this->fingerTable[0].successorID != startID) {
+        return fingerTable[0].successorNode->FixFingerTables(startID, newNode);
+    }
     return this;
 }
 
@@ -151,61 +127,98 @@ void ChordNode::Delete(std::string data, ChordNode *&chordPtr) {
     cout << "REMOVED " << data << " (key=" << hashkey << ") FROM " << node->ID << endl;
 }
 
-bool ChordNode::InsideRange(int ID, int start, int finish) {
-    int maxID = this->chordSize;
-    int minID = 0;
-
-    return (start < finish && start <= ID && ID <= finish) ||
-            (start > finish && ((start <= ID && ID <= maxID) || (minID <= ID && ID <= finish))) ||
-            ((start == finish) && (ID == start));
-}
-
 ChordNode *ChordNode::FindKey(int key, ChordNode *&chordPtr) {
     return FindSuccessor(key, this->ID, chordPtr);
 }
 
-ChordNode *ChordNode::FindNode(int ID, ChordNode *&chordPtr) {
-    return NULL;
+ChordNode *ChordNode::FindNode(int ID, int startID, ChordNode *&chordPtr) {
+    int origID = this->ID;
+    this->ZeroFingerTable();
+    int shiftedID = this->ShiftID(ID, origID);
+    int i = this->ftSize - 1;
+    while (i >= 0 && shiftedID <= this->fingerTable[i].successorID) {
+        i--;
+    }
+
+    if (i == this->ftSize - 1) {
+        if (this->fingerTable[i].successorID == this->chordSize) {
+            this->UnZeroFingerTable(origID);
+            if (this->ID != startID)
+                cout << this->ID << endl;
+            return this;
+        }
+        this->UnZeroFingerTable(origID);
+        cout << this->ID << ">";
+        return this->fingerTable[i].successorNode->FindNode(ID, startID, this->fingerTable[i].successorNode);
+    }
+    if (i == -1) {
+        this->UnZeroFingerTable(origID);
+        if (this->ID != startID)
+            cout << this->ID << endl;
+        return this->fingerTable[0].successorNode;
+    }
+    this->UnZeroFingerTable(origID);
+    cout << this->ID << ">";
+    this->fingerTable[i].successorNode;
+    return this->fingerTable[i].successorNode->FindNode(ID, startID, chordPtr);
 }
 
 ChordNode *ChordNode::FindSuccessor(int ID, int startID, ChordNode *&chordPtr) {
-    if (InsideRange(ID, chordPtr->ID, chordPtr->successor->ID)) {
-        if (ID != startID) {
-            cout << chordPtr->ID << ">";
-        }
-        return chordPtr->successor;
-    } else {
-        for (int i = chordPtr->ftSize - 1; i >= 0; i++) {
-            if (ID <= this->fingerTable[i].successorID) {
-                return this->fingerTable[i].successorNode->FindSuccessor(ID, startID, chordPtr);
-            }
-        }
-        if (ID != startID) {
-            cout << chordPtr->ID << ">";
-        }
-        return this->successor->FindSuccessor(ID, startID, chordPtr);
+    int origID = this->ID;
+    this->ZeroFingerTable();
+    int shiftedID = this->ShiftID(ID, origID);
+    int i = this->ftSize - 1;
+    while (i >= 0 && shiftedID <= this->fingerTable[i].successorID) {
+        i--;
     }
 
-    /*
-    if (i == ftSize - 1) {
-        if (fingerTable[i].successorID == this->chordSize) {
+    if (i == this->ftSize - 1) {
+        if (this->fingerTable[i].successorID == this->chordSize) {
+            this->UnZeroFingerTable(origID);
             if (this->ID != startID)
-                cout << this->ID << '\n';
+                cout << this->ID << endl;
             return this;
         }
-        cout << this->ID << '>';
-        node = this->fingerTable[i].successorNode;
-        return node->fingerTable[i].successorNode->FindSuccessor(ID, startID, node);
+        this->UnZeroFingerTable(origID);
+        cout << this->ID << ">";
+        return this->fingerTable[i].successorNode->FindSuccessor(ID, startID, this->fingerTable[i].successorNode);
     }
     if (i == -1) {
+        this->UnZeroFingerTable(origID);
         if (this->ID != startID)
-            cout << this->ID << '\n';
+            cout << this->ID << endl;
         return this->fingerTable[0].successorNode;
     }
-    cout << this->ID << '>';
-    node = this->fingerTable[i].successorNode;
-    return this->fingerTable[i].successorNode->FindSuccessor(ID, startID, node);
-     */
+    this->UnZeroFingerTable(origID);
+    cout << this->ID << ">";
+    return this->fingerTable[i].successorNode->FindSuccessor(ID, startID, this->fingerTable[i].successorNode);
+}
+
+void ChordNode::ZeroFingerTable() {
+    int origID = this->ID;
+    this->ID = 0;
+    for (int i = 0; i < this->ftSize; i++) {
+        this->fingerTable[i].hop = 1 << i;
+        if (this->fingerTable[i].successorID <= origID) {
+            this->fingerTable[i].successorID |= this->chordSize;
+        }
+        this->fingerTable[i].successorID -= origID;
+    }
+}
+
+void ChordNode::UnZeroFingerTable(int origId) {
+    this->ID = origId;
+    for (int i = 0; i < this->ftSize; i++) {
+        this->fingerTable[i].hop = (this->fingerTable[i].hop + origId) & ~chordSize;
+        this->fingerTable[i].successorID = (this->fingerTable[i].successorID + origId) & ~chordSize;
+    }
+}
+
+int ChordNode::ShiftID(int ID, int shift) {
+    if (ID <= shift) {
+        ID |= this->chordSize;
+    }
+    return ID - shift;
 }
 
 int ChordNode::Hash(std::string data) {
