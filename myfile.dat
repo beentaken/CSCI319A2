@@ -1,3 +1,4 @@
 initchord 5
 addpeer 7
 addpeer 3
+removepeer 7

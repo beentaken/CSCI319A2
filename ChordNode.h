@@ -6,17 +6,15 @@
 #include "FingerTableRow.h"
 
 class ChordNode {
-    friend std::ostream& operator<<(std::ostream&, const ChordNode &);
+    friend std::ostream& operator<<(std::ostream&, const ChordNode&);
 public:
     ChordNode(int, int);
     ~ChordNode();
     void InitChord(int, ChordNode *&);
     void AddPeer(int, ChordNode *&);
     void RemovePeer(int, ChordNode *&);
-    ChordNode *FindKey(int, ChordNode *&);
-    ChordNode *FindNode(int, int, ChordNode *&);
-    ChordNode *FindSuccessor(int, int, ChordNode *&);
-    ChordNode *FixFingerTables(int, ChordNode *&);
+    ChordNode *FindKey(int, int, ChordNode *&);
+    int Hash(std::string);
     void Insert(std::string, ChordNode *&);
     void Delete(std::string, ChordNode *&);
     void Print(int, ChordNode *&);
@@ -26,15 +24,14 @@ public:
     };
 
 private:
-    int ID;
-    int ftSize, chordSize;
+    int ID, ftSize, chordSize;
     FingerTableRow *fingerTable;
     std::map <int, std::string> data;
 
+    void FixFingerTables(int, ChordNode *);
     void ZeroFingerTable();
     void UnZeroFingerTable(int);
     int ShiftID(int, int);
-    int Hash(std::string);
 };
 
 #endif	/* CHORDNODE_H */
