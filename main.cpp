@@ -1,3 +1,9 @@
+/******************************************************************************
+ * Mark Thompson                                                              *
+ * Student #: 4419431                                                         *
+ * CSCI319 Distributed Systems - Assignment 2 (Chord Simulator)               *
+ *****************************************************************************/
+
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -41,20 +47,12 @@ void Read(char *filename) {
                 data = line.substr(7, lineend);
                 chordPtr->Delete(data, chordPtr);
             } else if (line.substr(0, 5) == "print") {
-                data = line.substr(7, lineend);
+                data = line.substr(6, lineend);
                 int ID = atoi(data.c_str());
                 chordPtr->Print(ID, chordPtr);
             }
         }
     }
-
-    cout << endl << endl << *chordPtr << endl;
-    ChordNode *succ = chordPtr->GetSuccessor();
-    while (succ != chordPtr) {
-        cout << *succ << endl;
-        succ = succ->GetSuccessor();
-    }
-
 }
 
 int main(int argc, char** argv) {
